@@ -1,0 +1,60 @@
+IT:OKAY: SO.
+
+how do we do side switching?? 
+IF TRANSFORM.POS X > TARGET.POS.X LOOK LEFT
+IF TRANSFORM.POS.X < TARGET.POS.X LOOK RIGHT
+
+FACING ENUM?? BOOL?? 
+
+I FWEAKING WOVE WADIOHEAD
+
+YEAH FUCK IT BOOL FACINGLEFT
+IT'S LESS MESSY THAN AN ENUM
+OR MAYBE LEFTOFOPPONENT
+
+THAT READS WELL
+
+IF FALSE THEY ARE OBVIOUSLY RIGHT OF THE OPPONENT OR DIRECTLY ABOVE THEM IN WHICH CASE GET FUCKED
+
+ALRIGHT. THEN WHAT DO YOU DO WITH INPUTS???? FLIP 'EM, BUT ONLY FOR MOVE INPUTS. KEEP MOVEMENT THE SAME
+IF NOT THAT'D BE FUCKED UP
+
+(CHARACTER THAT HAS TWO DIFFERENT SETS OF SPECIAL MOVES DEPENDING ON THE SIDE HE'S ON??)
+
+WRITE AN INPUT BUFFER DEAL THAT SPITS OUT FLIPPED INPUTS
+
+THEN ON SPECIAL CHECKING CHECK FLIPPED INPUTS INSTEAD IF ON THE FLIPSIDE
+
+IT"S NOT IN THE FREAKING INPUT BUFFER SCRIPT IT'S IN THE READ INPUT SECTION DO IT THERE
+
+okay alright level headed zen mode
+
+um so i'd like to not have to do another foreach and instead be able to send the inputs flipped but that is not going to happen
+
+but: there's only two homies on screen. they can have a few for loops. as a treat
+
+LOL SWITCH STATEMENT GET FUCKED STUPID
+
+alright. \
+
+
+THAT WAS FUN!!! (it was not)
+
+what next>???
+
+
+so we need: movement values for specific moves
+
+hitboxes (oh GOD)
+
+HOW R WE GONNA HANDLE X/Y MOTION 4 MOVES
+
+well. we're gonna have a value, right. and we animate that value. and we add it to the movement transform?? OR. if DOINGMOVE is active we transform.translate that value. that's better.
+
+HOW DO WE FIGURE OUT DOINGMOVE
+
+
+WELL FIRST we need to sort out the last of the scriptableobject system, which is the animation triggers. instead of triggering triggers we need to instead anim.play animations from the scriptableobject and then find when they are done to transition back into lovely idle state
+
+
+I FWEAKING WOVE WOVE WOVE AESOP WOCK

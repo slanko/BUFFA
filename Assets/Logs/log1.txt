@@ -1,0 +1,96 @@
+how the got damn frickjgn hell i mean HELL do i make an input buffer??
+
+okay. so. every frame. poll the direction of the stick/d-pad (boolean toggles for both for stick only or D-Pad only)
+
+then. add an InputEntry to a list.
+
+youhave a float. this float controls how many frames the bufffer stays up for.
+
+then, each frame, output to a variable the uhhh list. as a struct. maybe?? or maybe just alist. hmm.
+
+then check if that list contains the right things in the right order. do a move.
+
+move structure: a struct containing a list of InputEntrys. this is your motion input. (236 sort of stuff)
+and also a button. or combo of buttons. this is your button input. so it'd be like 236P.  or, QCF+P. hadouken jablouken
+
+WAIT. YOU NEED TO GET SINGLE INPUTS YOU FIEND. YOU SCALLYWAG. IT SHAN'T BE SO EASY
+
+OKAY. so you get the direction right. then you just check if it's changed. a double tap to run would require 6 5 6 within the 6F window.
+
+HOW TO HANDLE UPDIR???
+
+GET IF GREATER THAN 0 AND LESS THAN OR EQUAL TO 22.5 and also IF GREATER THAN 337.5 AND LES THAN OR EQUAL TO 360
+
+ez
+
+WAIT YOU DINGBAT
+
+SINCE IT'S SPLIT ALONG X YOU HAVE TO DO THE UHH
+
+YEAH UHH
+
+SPLIT THAT
+
+THAT WOULD BE IF GREATER THAN 0 AND LESS THAN OR EQUAL TO 22.5 and in a seperate statement IF GREATER THAN 
+
+ALRIGHT FUCK YOU IT"S DONE
+
+how do we differentiate buttons and directions
+
+two lists??? one enum???????
+
+ONE ENUM.
+
+yeah?? alright??
+
+YEAH????
+
+what does this mean for me. um. so if the directions and buttons share the same type they can share the same list. so whenever one is pressed, add it to the input list. easy, right? no structs, no fuss.
+
+WE HAVE TO ARRAY THE FUCKING BUFFER.
+
+HOW DO???
+
+OKAY. WHEN YOU ADD TO THE BUFFER YOU HAVE TO USE A SPECIAL FUNCTION. YOU NEED TO TEMP OUT THE FIRST ITEM IN THE ARRAY, THEN SWAP IN THE NEW VALUE. THEN TEMP OUT THE SECOND AND PUT IN THE FIRST TEMP. SET THE FIRST TEMP TO THE
+ONE YOU JUST TOOK OUT. REPEAT UNTIL DONE
+
+okay. straight up and straight down are being FUCKY
+
+both output downleft????
+
+WHAT 2 DO 2MORROW:
+
+SET UP MOVES!! basically you need: a struct with ANIMATIONTRIGGER, a list of DIRECTIONS AND INPUTS and then you need to find a way to get the buffer output and scrub it for moves (ie. check if it has 2, 3, 6 and X in that order) then if it's true, set the trigger.
+
+
+alright. checking a move.
+
+NEW BOOL MOVEGOOD = TRUE
+SO FOREACH INPUTBUFFER.INPUTTYPE MOTION IN THE FUNNY MOVE'S LIST OF MOTIONS
+
+FOR INT I = 0 I < INPUTBUFFER.LENGTH - 1 I++ 
+
+go through and when you find it, break. if you don't find it, movegood = false
+
+
+
+WHAT2DO NEXT: FINISH JUMP ARC. SIDE SWITCHING. THOSE ARE OUR BIG 2 CURRENTLY
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

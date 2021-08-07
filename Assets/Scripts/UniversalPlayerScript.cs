@@ -1,0 +1,274 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.InputSystem;
+public class UniversalPlayerScript : MonoBehaviour
+{
+    [SerializeField] float movementSpeed, inputDeadZone;
+    InputBuffer buffer;
+    //InputBuffer.inputType lastDir; //took this out because of the function holding up the input buffer - maybe reenable it for certain character?
+    [SerializeField] Animator anim;
+    [SerializeField] Animation myAnimation;
+    MoveScriptableObject currentMove;
+    int currentMoveFrame;
+
+    [SerializeField, Header("Jumping")] AnimationCurve jumpArc;
+    [SerializeField] float jumpSpeed, jumpDist;
+    bool airborne = false;
+
+    [SerializeField, Header("Move List")] MoveScriptableObject[] moveList;
+
+    [SerializeField, Header("Targeting")] bool leftOfTarget;
+    [SerializeField] Transform target, myVisual;
+
+    #region inputHandling
+    Vector2 moveVals = Vector2.zero;
+    public void XBUTTON(InputAction.CallbackContext context)
+    {
+        if (context.started) buffer.addToBuffer(InputBuffer.inputType.XBUTTON);
+    }
+    //hey you can add negative edge with context.cancelled - remember this
+    public void YBUTTON(InputAction.CallbackContext context)
+    {
+        if (context.started) buffer.addToBuffer(InputBuffer.inputType.YBUTTON);
+    }    
+    public void ABUTTON(InputAction.CallbackContext context)
+    {
+        if (context.started) buffer.addToBuffer(InputBuffer.inputType.ABUTTON);
+    }    
+    public void BBUTTON(InputAction.CallbackContext context)
+    {
+        if (context.started) buffer.addToBuffer(InputBuffer.inputType.BBUTTON);
+    }
+
+    public void getMovementInputs(InputAction.CallbackContext context)
+    {
+        moveVals = context.ReadValue<Vector2>();
+    }
+
+    public void sendInputToInputBuffer(InputBuffer.inputType dir)
+    {
+        buffer.addToBuffer(dir);
+    }
+
+    public InputBuffer.inputType getDirFromVector2(Vector2 dirVector)
+    {
+        InputBuffer.inputType input = new InputBuffer.inputType();
+        //this part is gonna SUCK
+        if (dirVector.magnitude > inputDeadZone || dirVector.magnitude < -inputDeadZone)
+        {
+            if (dirVector.x >= 0)
+            {
+                float tempDir = Vector2.Angle(Vector2.up, dirVector);
+                if (tempDir > 0 && tempDir <= 22.5f) input = InputBuffer.inputType.UP;
+                if (tempDir > 22.5f && tempDir <= 67.5f) input = InputBuffer.inputType.UPRIGHT;
+                if (tempDir > 67.5f && tempDir <= 117.5f) input = InputBuffer.inputType.RIGHT;
+                if (tempDir > 117.5f && tempDir <= 157.5f) input = InputBuffer.inputType.DOWNRIGHT;
+                if (tempDir > 157.5f && tempDir <= 180f) input = InputBuffer.inputType.DOWN;
+            }
+            if (dirVector.x <= 0)
+            {
+                float tempDir = Vector2.Angle(Vector2.down, dirVector);
+                if (tempDir > 0 && tempDir <= 22.5f) input = InputBuffer.inputType.DOWN;
+                if (tempDir > 22.5f && tempDir <= 67.5f) input = InputBuffer.inputType.DOWNLEFT;
+                if (tempDir > 67.5f && tempDir <= 117.5f) input = InputBuffer.inputType.LEFT;
+                if (tempDir > 117.5f && tempDir <= 157.5f) input = InputBuffer.inputType.UPLEFT;
+                if (tempDir > 157.5f && tempDir <= 180f) input = InputBuffer.inputType.UP;
+            }
+        }
+        else input = InputBuffer.inputType.NEUTRAL;
+        return input;
+    }
+
+    void handleInputs()
+    {
+        InputBuffer.inputType dir = getDirFromVector2(moveVals);
+        //if (dir != lastDir || dir == InputBuffer.inputType.NEUTRAL) // this is questionable - shouldn't we allow all inputs and scrub the list until we get the one we need??
+        buffer.addToBuffer(dir); // yes we should. otherwise the input buffer would just STOP AND WAIT until you'd done the whole input if you kept buttons held.
+        //lastDir = dir;
+    }
+
+    #endregion
+
+    #region bufferOutputHandling
+
+    InputBuffer.inputType[] currentBufferOutput;
+    InputBuffer.inputType currentDir;
+
+    void bufferReadUpdate()
+    {
+        currentBufferOutput = buffer.bufferOutput();
+        currentDir = currentBufferOutput[0];
+        if (!myAnimation.isPlaying || (myAnimation.isPlaying && currentMoveFrame >= currentMove.specialCancelTime))
+        {
+            foreach (MoveScriptableObject move in moveList) checkMove(move, currentBufferOutput);
+        }
+    }
+    //get input buffer
+    InputBuffer.inputType getFlippedInput(InputBuffer.inputType currentInput)
+    {
+        InputBuffer.inputType input = currentInput;
+
+        switch (input)
+        {
+            case InputBuffer.inputType.LEFT:
+                input = InputBuffer.inputType.RIGHT;
+                break;
+            case InputBuffer.inputType.RIGHT:
+                input = InputBuffer.inputType.LEFT;
+                break;
+            case InputBuffer.inputType.DOWNLEFT:
+                input = InputBuffer.inputType.DOWNRIGHT;
+                break;
+            case InputBuffer.inputType.DOWNRIGHT:
+                input = InputBuffer.inputType.DOWNLEFT;
+                break;
+            case InputBuffer.inputType.UPLEFT:
+                input = InputBuffer.inputType.UPRIGHT;
+                break;
+            case InputBuffer.inputType.UPRIGHT:
+                input = InputBuffer.inputType.UPLEFT;
+                break;
+        }
+        return input;
+    }
+
+    void checkMove(MoveScriptableObject move , InputBuffer.inputType[] currentBuffer)
+    {
+        if(move != currentMove)
+        {
+            bool moveGood = true;
+            int startPoint = currentBufferOutput.Length - 1;
+            foreach (InputBuffer.inputType motion in move.inputRequired)
+            {
+                for (int i = startPoint; i > 0; i--)
+                {
+                    if (motion == currentBuffer[i] && leftOfTarget)
+                    {
+                        moveGood = true;
+                        startPoint = i;
+                        break;
+                    }
+                    else if (motion == getFlippedInput(currentBuffer[i]) && !leftOfTarget)
+                    {
+                        moveGood = true;
+                        startPoint = i;
+                        break;
+                    }
+                    else moveGood = false;
+                }
+                if (moveGood == false) break;
+            }
+            if (moveGood == true)
+            {
+                if (myAnimation.isPlaying)
+                {
+                    Debug.Log("Special Cancel!"); // make this take meter later
+                    StopCoroutine(currentDisablerCoroutine);
+                    currentMove.moveAnim.legacy = false;
+                    currentMove = new MoveScriptableObject();
+                }
+                //LEGACY COMPONENTS?? VOMIT EMOJI
+                currentMove = move;
+                move.moveAnim.legacy = true;
+                myAnimation.AddClip(move.moveAnim, "MOVE");
+                myAnimation.Play("MOVE");
+                currentDisablerCoroutine = StartCoroutine(disableAnimatorForAMove());
+                buffer.clearBuffer();
+                StartCoroutine(clearTriggerWithDelay(move.animTrigger));
+                Debug.Log("Move good!");
+            }
+        }
+    }
+
+    Coroutine currentDisablerCoroutine;
+    IEnumerator disableAnimatorForAMove()
+    {
+        currentMoveFrame = 0;
+        anim.enabled = false;
+        while (myAnimation.isPlaying)
+        {
+            currentMoveFrame++;
+            yield return new WaitForFixedUpdate();
+        }
+        currentMove.moveAnim.legacy = false; // this is FUCKING ANNOYING!! they have to be legacy to play but have to not be legacy to be edited in unity. CRINGE!!
+        currentMove = new MoveScriptableObject();
+        anim.enabled = true;
+        anim.Play("Idle");
+    }
+
+    IEnumerator clearTriggerWithDelay(string trigger)
+    {
+        yield return new WaitForSeconds(0.1f);
+        anim.ResetTrigger(trigger);
+        if (anim.GetBool(trigger)) Debug.Log("SHIT!!");
+        else Debug.Log("YUH");
+    }
+
+    #endregion
+
+    private void Start()
+    {
+        buffer = GetComponent<InputBuffer>();
+        //lastDir = InputBuffer.inputType.NEUTRAL;
+    }
+
+    private void FixedUpdate()
+    {
+        if (!anim.GetBool("Crouching") && !myAnimation.isPlaying)
+        {
+            if (currentDir == InputBuffer.inputType.RIGHT) transform.Translate(new Vector3(movementSpeed * Time.deltaTime, 0, 0));
+            if (currentDir == InputBuffer.inputType.LEFT) transform.Translate(new Vector3(-movementSpeed * Time.deltaTime, 0, 0));
+            if (currentDir == InputBuffer.inputType.UP || currentDir == InputBuffer.inputType.UPRIGHT || currentDir == InputBuffer.inputType.UPLEFT)
+            {
+                StartCoroutine(jump(currentDir));
+                anim.SetTrigger("Jump");
+                StartCoroutine(clearTriggerWithDelay("Jump"));
+            }
+        }
+        leftOfTarget = transform.position.x < target.transform.position.x;
+        if (leftOfTarget) myVisual.transform.eulerAngles = new Vector3(0, 180, 0);
+        else myVisual.transform.eulerAngles = Vector3.zero;
+
+        handleInputs();
+        animatorUpdate();
+        bufferReadUpdate();
+    }
+
+    void animatorUpdate()
+    {
+        if (leftOfTarget)
+        {
+            anim.SetBool("WalkingForward", currentDir == InputBuffer.inputType.RIGHT);
+            anim.SetBool("WalkingBackward", currentDir == InputBuffer.inputType.LEFT);
+        }
+        else
+        {
+            anim.SetBool("WalkingForward", currentDir == InputBuffer.inputType.LEFT);
+            anim.SetBool("WalkingBackward", currentDir == InputBuffer.inputType.RIGHT);
+        }
+        anim.SetBool("Airborne", airborne);
+        anim.SetBool("Crouching", currentDir == InputBuffer.inputType.DOWN || currentDir == InputBuffer.inputType.DOWNRIGHT || currentDir == InputBuffer.inputType.DOWNLEFT);
+    }
+
+    IEnumerator jump(InputBuffer.inputType input)
+    {
+        if(airborne == false && (input == InputBuffer.inputType.UP || input == InputBuffer.inputType.UPRIGHT || input == InputBuffer.inputType.UPLEFT))
+        {
+            Vector3 pos = transform.position;
+            airborne = true;
+            for (float i = 0; i < 1; i += (jumpSpeed * Time.deltaTime))
+            {
+                if(input == InputBuffer.inputType.UP) transform.position = new Vector3(pos.x, pos.y + jumpArc.Evaluate(i), pos.z);
+                if(input == InputBuffer.inputType.UPRIGHT) transform.position = new Vector3(pos.x + (i * jumpDist), pos.y + jumpArc.Evaluate(i), pos.z);
+                if(input == InputBuffer.inputType.UPLEFT) transform.position = new Vector3(pos.x + -(i * jumpDist), pos.y + jumpArc.Evaluate(i), pos.z);
+                yield return new WaitForEndOfFrame();
+                anim.SetFloat("JumpPercent", i);
+            }
+            airborne = false;
+            transform.position = new Vector3(transform.position.x, 1.5f, transform.position.z);
+        }
+    }
+
+
+}
