@@ -6,6 +6,7 @@ public class UniversalPlayerScript : MonoBehaviour
 {
     [SerializeField] float movementSpeed, inputDeadZone;
     InputBuffer buffer;
+    int bufferLength;
     //InputBuffer.inputType lastDir; //took this out because of the function holding up the input buffer - maybe reenable it for certain character?
     [SerializeField] Animator anim;
     [SerializeField] Animation myAnimation;
@@ -16,7 +17,7 @@ public class UniversalPlayerScript : MonoBehaviour
     [SerializeField] float jumpSpeed, jumpDist;
     bool airborne = false;
 
-    [SerializeField, Header("Move List")] MoveScriptableObject[] moveList;
+    [SerializeField, Header("Move List")] MoveScriptableObject[] specialMoves, normals, movementInputs;
 
     [SerializeField, Header("Targeting")] bool leftOfTarget;
     [SerializeField] Transform target, myVisual;
@@ -99,9 +100,47 @@ public class UniversalPlayerScript : MonoBehaviour
     {
         currentBufferOutput = buffer.bufferOutput();
         currentDir = currentBufferOutput[0];
-        if (!myAnimation.isPlaying || (myAnimation.isPlaying && currentMoveFrame >= currentMove.specialCancelTime))
+        if (!myAnimation.isPlaying || (myAnimation.isPlaying && currentMoveFrame >= currentMove.specialCancelTime && currentMove.specialCancelTime != 0))
         {
-            foreach (MoveScriptableObject move in moveList) checkMove(move, currentBufferOutput);
+            bool foundSpecial = false, foundNormal = false;
+            foreach (MoveScriptableObject move in specialMoves)
+            {
+                if(checkMove(move, currentBufferOutput))
+                {
+                    foundSpecial = true;
+                    Debug.Log("found special!");
+                    if(myAnimation.isPlaying) cancelCurrentMove();
+                    startMove(move);
+                    break;
+                }
+            }
+            if (!foundSpecial)
+            {
+                foreach(MoveScriptableObject move in normals)
+                {
+                    if(checkMove(move, currentBufferOutput, 5))
+                    {
+                        Debug.Log("found normal!");
+                        foundNormal = true;
+                        if (myAnimation.isPlaying) cancelCurrentMove();
+                        startMove(move);
+                        break;
+                    }
+                }
+            }
+            if (!foundNormal)
+            {
+                foreach(MoveScriptableObject move in movementInputs)
+                {
+                    if (checkMove(move, currentBufferOutput, 5))
+                    {
+                        Debug.Log("found movement!");
+                        if (myAnimation.isPlaying) cancelCurrentMove();
+                        startMove(move);
+                        break;
+                    }
+                }
+            }
         }
     }
     //get input buffer
@@ -133,12 +172,13 @@ public class UniversalPlayerScript : MonoBehaviour
         return input;
     }
 
-    void checkMove(MoveScriptableObject move , InputBuffer.inputType[] currentBuffer)
+    bool checkMove(MoveScriptableObject move , InputBuffer.inputType[] currentBuffer, int bufLength = 0)
     {
-        if(move != currentMove)
+        if (bufLength == 0) bufLength = currentBuffer.Length - 1;
+        bool moveGood = true;
+        if (move != currentMove)
         {
-            bool moveGood = true;
-            int startPoint = currentBufferOutput.Length - 1;
+            int startPoint = bufLength;
             foreach (InputBuffer.inputType motion in move.inputRequired)
             {
                 for (int i = startPoint; i > 0; i--)
@@ -159,26 +199,29 @@ public class UniversalPlayerScript : MonoBehaviour
                 }
                 if (moveGood == false) break;
             }
-            if (moveGood == true)
-            {
-                if (myAnimation.isPlaying)
-                {
-                    Debug.Log("Special Cancel!"); // make this take meter later
-                    StopCoroutine(currentDisablerCoroutine);
-                    currentMove.moveAnim.legacy = false;
-                    currentMove = new MoveScriptableObject();
-                }
-                //LEGACY COMPONENTS?? VOMIT EMOJI
-                currentMove = move;
-                move.moveAnim.legacy = true;
-                myAnimation.AddClip(move.moveAnim, "MOVE");
-                myAnimation.Play("MOVE");
-                currentDisablerCoroutine = StartCoroutine(disableAnimatorForAMove());
-                buffer.clearBuffer();
-                StartCoroutine(clearTriggerWithDelay(move.animTrigger));
-                Debug.Log("Move good!");
-            }
         }
+        else moveGood = false;
+        return moveGood;
+    }
+
+    void cancelCurrentMove()
+    {
+            myAnimation.Stop();
+            StopCoroutine(currentDisablerCoroutine);
+            currentMove.moveAnim.legacy = false;
+            currentMove = new MoveScriptableObject();
+    }
+
+    void startMove(MoveScriptableObject move)
+    {
+        buffer.clearBuffer();
+        //LEGACY COMPONENTS?? VOMIT EMOJI
+        currentMove = move;
+        currentMove.moveAnim.legacy = true;
+        myAnimation.AddClip(move.moveAnim, "MOVE");
+        myAnimation.Play("MOVE");
+        currentDisablerCoroutine = StartCoroutine(disableAnimatorForAMove());
+        Debug.Log("Move good!");
     }
 
     Coroutine currentDisablerCoroutine;
@@ -210,6 +253,7 @@ public class UniversalPlayerScript : MonoBehaviour
     private void Start()
     {
         buffer = GetComponent<InputBuffer>();
+        bufferLength = buffer.bufferOutput().Length - 1;
         //lastDir = InputBuffer.inputType.NEUTRAL;
     }
 
@@ -227,8 +271,8 @@ public class UniversalPlayerScript : MonoBehaviour
             }
         }
         leftOfTarget = transform.position.x < target.transform.position.x;
-        if (leftOfTarget) myVisual.transform.eulerAngles = new Vector3(0, 180, 0);
-        else myVisual.transform.eulerAngles = Vector3.zero;
+        if (leftOfTarget) myVisual.transform.localScale = new Vector3(1,1,1);
+        else myVisual.transform.localScale = new Vector3(-1, 1, 1);
 
         handleInputs();
         animatorUpdate();
