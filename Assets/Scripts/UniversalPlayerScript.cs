@@ -10,6 +10,7 @@ public class UniversalPlayerScript : MonoBehaviour
     //InputBuffer.inputType lastDir; //took this out because of the function holding up the input buffer - maybe reenable it for certain character?
     [SerializeField] Animator anim;
     [SerializeField] Animation myAnimation;
+    [SerializeField] AnimatableValues animValues;
     MoveScriptableObject currentMove;
     int currentMoveFrame;
 
@@ -270,6 +271,8 @@ public class UniversalPlayerScript : MonoBehaviour
                 StartCoroutine(clearTriggerWithDelay("Jump"));
             }
         }
+        if (myAnimation.isPlaying) transform.Translate(new Vector3(animValues.XMoveMultiplier, 0, 0) * Time.deltaTime);
+        if (!myAnimation.isPlaying) animValues.XMoveMultiplier = 0;
         leftOfTarget = transform.position.x < target.transform.position.x;
         if (leftOfTarget) myVisual.transform.localScale = new Vector3(1,1,1);
         else myVisual.transform.localScale = new Vector3(-1, 1, 1);
