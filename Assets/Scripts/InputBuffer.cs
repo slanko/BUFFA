@@ -18,7 +18,19 @@ public class InputBuffer : MonoBehaviour
         XBUTTON,
         YBUTTON,
         ABUTTON,
-        BBUTTON
+        BBUTTON,
+        XY,
+        AB,
+        XA,
+        YB,
+        XB,
+        YA,
+        XYB,
+        YBA,
+        BAX,
+        AXY,
+        XYAB
+
     }
     [SerializeField] inputType[] buffer;
 

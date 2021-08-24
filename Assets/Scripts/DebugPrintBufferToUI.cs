@@ -26,6 +26,17 @@ public class DebugPrintBufferToUI : MonoBehaviour
             if (input[i] == InputBuffer.inputType.YBUTTON) myText += "2";
             if (input[i] == InputBuffer.inputType.ABUTTON) myText += "3";
             if (input[i] == InputBuffer.inputType.BBUTTON) myText += "4";
+            if (input[i] == InputBuffer.inputType.XY) myText += "12";
+            if (input[i] == InputBuffer.inputType.AB) myText += "34";
+            if (input[i] == InputBuffer.inputType.XA) myText += "13";
+            if (input[i] == InputBuffer.inputType.YB) myText += "24";
+            if (input[i] == InputBuffer.inputType.XB) myText += "14";
+            if (input[i] == InputBuffer.inputType.YA) myText += "23";
+            if (input[i] == InputBuffer.inputType.XYB) myText += "123";
+            if (input[i] == InputBuffer.inputType.YBA) myText += "243";
+            if (input[i] == InputBuffer.inputType.BAX) myText += "431";
+            if (input[i] == InputBuffer.inputType.AXY) myText += "312";
+            if (input[i] == InputBuffer.inputType.XYAB) myText += "1234";
             
         }
         bufferText.text = myText;

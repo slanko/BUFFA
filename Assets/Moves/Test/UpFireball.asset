@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ac0e1c445d6c13f40b4553fbd6bdfd06, type: 3}
-  m_Name: MedJab
+  m_Name: UpFireball
   m_EditorClassIdentifier: 
-  moveName: MedJab
+  moveName: UpFireball
   grounded: 1
   airborne: 0
-  specialCancelTime: 25
-  moveAnim: {fileID: 7400000, guid: 4e9263f09df9a59468c109fea3c7ca10, type: 2}
-  inputRequired: 09000000
+  specialCancelTime: 0
+  moveAnim: {fileID: 7400000, guid: a0f7eae91a2672745b531bfa5efa99a1, type: 2}
+  inputRequired: 0100000002000000050000000a000000

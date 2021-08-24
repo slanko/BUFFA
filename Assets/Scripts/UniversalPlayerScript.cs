@@ -7,6 +7,7 @@ public class UniversalPlayerScript : MonoBehaviour
     [SerializeField] float movementSpeed, inputDeadZone;
     InputBuffer buffer;
     int bufferLength;
+    public bool xDown, yDown, aDown, bDown;
     //InputBuffer.inputType lastDir; //took this out because of the function holding up the input buffer - maybe reenable it for certain character?
     [SerializeField] Animator anim;
     [SerializeField] Animation myAnimation;
@@ -18,29 +19,104 @@ public class UniversalPlayerScript : MonoBehaviour
     [SerializeField] float jumpSpeed, jumpDist;
     bool airborne = false;
 
-    [SerializeField, Header("Move List")] MoveScriptableObject[] specialMoves, normals, movementInputs;
+    [SerializeField, Header("Move List"), Tooltip("PUT LONGER INPUTS FIRST!! OTHERWISE THEY DON'T GET FIRED")] MoveScriptableObject[] specialMoves, normals, movementInputs;
 
-    [SerializeField, Header("Targeting")] bool leftOfTarget;
+    [Header("Targeting")] public bool leftOfTarget;
     [SerializeField] Transform target, myVisual;
 
     #region inputHandling
     Vector2 moveVals = Vector2.zero;
     public void XBUTTON(InputAction.CallbackContext context)
     {
-        if (context.started) buffer.addToBuffer(InputBuffer.inputType.XBUTTON);
+        if (context.started)
+        {
+            xDown = true;
+            handleButtonInputs();
+        }
+        if (context.canceled) xDown = false;
     }
     //hey you can add negative edge with context.cancelled - remember this
     public void YBUTTON(InputAction.CallbackContext context)
     {
-        if (context.started) buffer.addToBuffer(InputBuffer.inputType.YBUTTON);
+        if (context.started)
+        {
+            yDown = true;
+            handleButtonInputs();
+        }
+        if (context.canceled) yDown = false;
     }    
     public void ABUTTON(InputAction.CallbackContext context)
     {
-        if (context.started) buffer.addToBuffer(InputBuffer.inputType.ABUTTON);
+        if (context.started)
+        {
+            aDown = true;
+            handleButtonInputs();
+        }
+        if (context.canceled) aDown = false;
     }    
     public void BBUTTON(InputAction.CallbackContext context)
     {
-        if (context.started) buffer.addToBuffer(InputBuffer.inputType.BBUTTON);
+        if (context.started)
+        {
+            bDown = true;
+            handleButtonInputs();
+        }
+        if (context.canceled) bDown = false;
+    }
+
+    public void XY(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            xDown = true;
+            yDown = true;
+            handleButtonInputs();
+        }
+        if (context.canceled)
+        {
+            xDown = false;
+            yDown = false;
+        }
+    }
+
+    public void AB(InputAction.CallbackContext context)
+    {
+        if (context.started)
+        {
+            aDown = true;
+            bDown = true;
+            handleButtonInputs();
+        }
+        if (context.canceled)
+        {
+            aDown = false;
+            bDown = false;
+        }
+    }
+
+    public void handleButtonInputs()
+    {
+        var currentBufferOutput = buffer.bufferOutput();
+        //X, Y, A, B, XY, AB, XA, YB, XB, YA, XYB, YBA, BAX, AXY, XYBA, FUCK YOU!!
+        if (xDown && !yDown && !aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.XBUTTON);
+        if (!xDown && yDown && !aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.YBUTTON);
+        if (!xDown && !yDown && aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.ABUTTON);
+        if (!xDown && !yDown && !aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.BBUTTON);
+        //DOUBLES
+        if (xDown && yDown && !aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.XY);
+        if (!xDown && !yDown && aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.AB);
+        if (xDown && !yDown && aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.XA);
+        if (!xDown && yDown && !aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.YB);
+        if (xDown && !yDown && !aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.XB);
+        if (!xDown && yDown && aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.YA);
+        //TRIPLES
+        if (xDown && yDown && !aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.XYB);
+        if (!xDown && yDown && aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.YBA);
+        if (xDown && !yDown && aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.BAX);
+        if (xDown && yDown && aDown && !bDown) sendInputToInputBuffer(InputBuffer.inputType.AXY);
+        //THE FINALE
+        if (xDown && yDown && aDown && bDown) sendInputToInputBuffer(InputBuffer.inputType.XYAB);
+        //this has dealt me irreperable psych damage
     }
 
     public void getMovementInputs(InputAction.CallbackContext context)
@@ -216,6 +292,7 @@ public class UniversalPlayerScript : MonoBehaviour
     void startMove(MoveScriptableObject move)
     {
         buffer.clearBuffer();
+        animValues.XMoveMultiplier = 0;
         //LEGACY COMPONENTS?? VOMIT EMOJI
         currentMove = move;
         currentMove.moveAnim.legacy = true;
@@ -271,11 +348,13 @@ public class UniversalPlayerScript : MonoBehaviour
                 StartCoroutine(clearTriggerWithDelay("Jump"));
             }
         }
-        if (myAnimation.isPlaying) transform.Translate(new Vector3(animValues.XMoveMultiplier, 0, 0) * Time.deltaTime);
+        if (myAnimation.isPlaying && leftOfTarget) transform.Translate(new Vector3(animValues.XMoveMultiplier, 0, 0) * Time.deltaTime);
+        else if (myAnimation.isPlaying && !leftOfTarget) transform.Translate(new Vector3(-animValues.XMoveMultiplier, 0, 0) * Time.deltaTime);
+
         if (!myAnimation.isPlaying) animValues.XMoveMultiplier = 0;
         leftOfTarget = transform.position.x < target.transform.position.x;
         if (leftOfTarget) myVisual.transform.localScale = new Vector3(1,1,1);
-        else myVisual.transform.localScale = new Vector3(-1, 1, 1);
+        else myVisual.transform.localScale = new Vector3(1, 1, -1);
 
         handleInputs();
         animatorUpdate();

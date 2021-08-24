@@ -44,6 +44,38 @@
                     "expectedControlType": "Button",
                     "processors": "",
                     "interactions": ""
+                },
+                {
+                    "name": "LB",
+                    "type": "Button",
+                    "id": "2fabdd32-7ca1-4845-a467-11f7a26aa552",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "RB",
+                    "type": "Button",
+                    "id": "714fa2b9-328f-4483-a04e-6cc1f21fc33f",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "LTRIGGER",
+                    "type": "Button",
+                    "id": "eab154ae-d6e0-44ad-93ca-91d68a73d4e6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
+                },
+                {
+                    "name": "RTRIGGER",
+                    "type": "Button",
+                    "id": "311f33fd-5766-41da-a52f-ec11258e1cf1",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": ""
                 }
             ],
             "bindings": [
@@ -275,6 +307,50 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse",
                     "action": "BBUTTON",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f1c32ea1-a786-4481-b0af-0cfd626cb1ef",
+                    "path": "<Gamepad>/leftShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "LB",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "669c3b95-085c-4789-aa74-f8495e860a35",
+                    "path": "<Gamepad>/rightShoulder",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "RB",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f0ada48f-40d2-42d8-b354-2572ae1a2a04",
+                    "path": "<Gamepad>/leftTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "LTRIGGER",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "263e6c1d-acde-40c3-9a11-585310cea4fa",
+                    "path": "<Gamepad>/rightTrigger",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "RTRIGGER",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

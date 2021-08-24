@@ -15,6 +15,6 @@ MonoBehaviour:
   moveName: LightJab
   grounded: 1
   airborne: 0
-  specialCancelTime: 0
+  specialCancelTime: 13
   moveAnim: {fileID: 7400000, guid: cf30365780f0cb94eb42f212de1607e7, type: 2}
   inputRequired: 0a000000
