@@ -6,15 +6,11 @@ public class ProjectileInstantiator : MonoBehaviour
 {
     [SerializeField] UniversalPlayerScript playerScript;
     [SerializeField] GameObject projectile;
-    [SerializeField] Transform instPoint;
+    [SerializeField] Transform instPoint, instPointInverse;
 
     public void instProjectile()
     {
         if (playerScript.leftOfTarget) Instantiate(projectile, instPoint.position, instPoint.rotation);
-        else Instantiate(projectile, instPoint.position, Quaternion.Inverse(instPoint.rotation));
-    }
-
-    void FixedUpdate()
-    {
+        else Instantiate(projectile, instPoint.position, instPointInverse.rotation);
     }
 }

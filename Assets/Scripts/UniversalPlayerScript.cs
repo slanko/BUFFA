@@ -17,9 +17,11 @@ public class UniversalPlayerScript : MonoBehaviour
 
     [SerializeField, Header("Jumping")] AnimationCurve jumpArc;
     [SerializeField] float jumpSpeed, jumpDist;
-    bool airborne = false;
+    bool airborne = false, grounded, crouching;
 
-    [SerializeField, Header("Move List"), Tooltip("PUT LONGER INPUTS FIRST!! OTHERWISE THEY DON'T GET FIRED")] MoveScriptableObject[] specialMoves, normals, movementInputs;
+    [SerializeField, Header("Move List"), Tooltip("PUT LONGER INPUTS FIRST!! OTHERWISE THEY DON'T GET FIRED")]
+    MoveScriptableObject[] specialMoves;
+    [SerializeField] MoveScriptableObject[] standingNormals, crouchingNormals, airNormals, movementInputs;
 
     [Header("Targeting")] public bool leftOfTarget;
     [SerializeField] Transform target, myVisual;
@@ -180,45 +182,36 @@ public class UniversalPlayerScript : MonoBehaviour
         if (!myAnimation.isPlaying || (myAnimation.isPlaying && currentMoveFrame >= currentMove.specialCancelTime && currentMove.specialCancelTime != 0))
         {
             bool foundSpecial = false, foundNormal = false;
-            foreach (MoveScriptableObject move in specialMoves)
-            {
-                if(checkMove(move, currentBufferOutput))
-                {
-                    foundSpecial = true;
-                    Debug.Log("found special!");
-                    if(myAnimation.isPlaying) cancelCurrentMove();
-                    startMove(move);
-                    break;
-                }
-            }
+            foundSpecial = readMoveList(specialMoves);
             if (!foundSpecial)
             {
-                foreach(MoveScriptableObject move in normals)
-                {
-                    if(checkMove(move, currentBufferOutput, 5))
-                    {
-                        Debug.Log("found normal!");
-                        foundNormal = true;
-                        if (myAnimation.isPlaying) cancelCurrentMove();
-                        startMove(move);
-                        break;
-                    }
-                }
+                if (!crouching && !airborne) foundNormal = readMoveList(standingNormals);
+                if (crouching && !airborne) foundNormal = readMoveList(crouchingNormals);
+                if (airborne) foundNormal = readMoveList(airNormals);
             }
             if (!foundNormal)
             {
-                foreach(MoveScriptableObject move in movementInputs)
-                {
-                    if (checkMove(move, currentBufferOutput, 5))
-                    {
-                        Debug.Log("found movement!");
-                        if (myAnimation.isPlaying) cancelCurrentMove();
-                        startMove(move);
-                        break;
-                    }
-                }
+                readMoveList(movementInputs);
             }
         }
+    }
+    //god this is so much prettier. thank you tired me
+    bool readMoveList(MoveScriptableObject[] list)
+    {
+        bool foundMove = false;
+        foreach (MoveScriptableObject move in list)
+        {
+            if (checkMove(move, currentBufferOutput))
+            {
+                foundMove = true;
+                Debug.Log("found special!");
+                if (myAnimation.isPlaying) cancelCurrentMove();
+                startMove(move);
+                break;
+            }
+        }
+        return foundMove;
+
     }
     //get input buffer
     InputBuffer.inputType getFlippedInput(InputBuffer.inputType currentInput)
@@ -375,6 +368,7 @@ public class UniversalPlayerScript : MonoBehaviour
         }
         anim.SetBool("Airborne", airborne);
         anim.SetBool("Crouching", currentDir == InputBuffer.inputType.DOWN || currentDir == InputBuffer.inputType.DOWNRIGHT || currentDir == InputBuffer.inputType.DOWNLEFT);
+        crouching = anim.GetBool("Crouching");
     }
 
     IEnumerator jump(InputBuffer.inputType input)
