@@ -30,7 +30,6 @@ public class InputBuffer : MonoBehaviour
         BAX,
         AXY,
         XYAB
-
     }
     [SerializeField] inputType[] buffer;
 
