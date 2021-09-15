@@ -10,7 +10,29 @@ public class ProjectileInstantiator : MonoBehaviour
 
     public void instProjectile()
     {
-        if (playerScript.leftOfTarget) Instantiate(projectile, instPoint.position, instPoint.rotation);
-        else Instantiate(projectile, instPoint.position, instPointInverse.rotation);
+        if (playerScript.leftOfTarget)
+        {
+            buildTheProjectile(false);
+        }
+        else 
+        {
+            buildTheProjectile(true);
+        }
+    }
+
+    void buildTheProjectile(bool reverse)
+    {
+        GameObject newProjectile;
+        if (!reverse)
+        {
+            newProjectile = Instantiate(projectile, instPoint.position, instPoint.rotation);
+        }
+        else
+        {
+            newProjectile = Instantiate(projectile, instPoint.position, instPointInverse.rotation);
+        }
+        HitboxScript hitbox;
+        hitbox = newProjectile.GetComponent<HitboxScript>();
+        hitbox.P2 = playerScript.P2;
     }
 }

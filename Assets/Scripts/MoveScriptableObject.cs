@@ -10,4 +10,7 @@ public class MoveScriptableObject : ScriptableObject
     public int specialCancelTime = 0;
     public AnimationClip moveAnim;
     public InputBuffer.inputType[] inputRequired;
+
+    [Header("On Hit Properties")] public bool launcher;
+    public float xChangeAmount;
 }
