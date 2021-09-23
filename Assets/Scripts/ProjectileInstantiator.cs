@@ -33,6 +33,6 @@ public class ProjectileInstantiator : MonoBehaviour
         }
         HitboxScript hitbox;
         hitbox = newProjectile.GetComponent<HitboxScript>();
-        hitbox.P2 = playerScript.P2;
+        hitbox.myHit.P2 = playerScript.P2;
     }
 }

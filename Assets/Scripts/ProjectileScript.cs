@@ -15,7 +15,7 @@ public class ProjectileScript : MonoBehaviour
     void Update()
     {
         transform.Translate(Vector3.forward * moveSpeed * Time.deltaTime);
-        if (hitbox.applied) destroyMe();
+        if (hitbox.myHit.applied) destroyMe();
     }
 
     void destroyMe()

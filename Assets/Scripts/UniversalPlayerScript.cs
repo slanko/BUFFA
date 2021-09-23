@@ -16,10 +16,12 @@ public class UniversalPlayerScript : MonoBehaviour
     [SerializeField] AnimatableValues animValues;
     MoveScriptableObject currentMove;
     int currentMoveFrame;
+    [SerializeField] int blockExitTime;
 
     [SerializeField, Header("Jumping")] AnimationCurve jumpArc;
     [SerializeField] float jumpSpeed, jumpDist;
-    bool airborne = false, grounded, crouching, dead;
+    bool airborne = false, grounded, crouching, blocking, dead;
+     public bool hitstun;
 
     [SerializeField, Header("Move List"), Tooltip("PUT LONGER INPUTS FIRST!! OTHERWISE THEY DON'T GET FIRED")]
     MoveScriptableObject[] specialMoves;
@@ -337,7 +339,7 @@ public class UniversalPlayerScript : MonoBehaviour
     private void FixedUpdate()
     {
         if (health <= 0) dead = true;
-        if (!anim.GetBool("Crouching") && !myAnimation.isPlaying && !dead)
+        if (!anim.GetBool("Crouching") && !myAnimation.isPlaying && !dead && !blocking && !hitstun)
         {
             if (currentDir == InputBuffer.inputType.RIGHT) transform.Translate(new Vector3(movementSpeed * Time.deltaTime, 0, 0));
             if (currentDir == InputBuffer.inputType.LEFT) transform.Translate(new Vector3(-movementSpeed * Time.deltaTime, 0, 0));
@@ -358,10 +360,15 @@ public class UniversalPlayerScript : MonoBehaviour
             if (leftOfTarget) myVisual.transform.localScale = new Vector3(1, 1, 1);
             else myVisual.transform.localScale = new Vector3(1, 1, -1);
         }
-
+        if (blockExitTime > 0) blockExitTime--;
+        if(blockExitTime <= 0)
+        {
+            blocking = false;
+            blockExitTime = 0;
+        }
         handleInputs();
-        animatorUpdate();
         bufferReadUpdate();
+        animatorUpdate();
     }
 
     void animatorUpdate()
@@ -380,6 +387,7 @@ public class UniversalPlayerScript : MonoBehaviour
         anim.SetBool("Crouching", currentDir == InputBuffer.inputType.DOWN || currentDir == InputBuffer.inputType.DOWNRIGHT || currentDir == InputBuffer.inputType.DOWNLEFT);
         crouching = anim.GetBool("Crouching");
         anim.SetBool("Dead", dead);
+        anim.SetBool("Block", blocking);
     }
 
     IEnumerator jump(InputBuffer.inputType input)
@@ -410,37 +418,47 @@ public class UniversalPlayerScript : MonoBehaviour
         }
     }
 
-    IEnumerator getPushed()
-    {
-        yield return new WaitForEndOfFrame();
-    }
-
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if(other.gameObject.tag == "Hitbox")
         {
             HitboxScript hitbox = other.GetComponent<HitboxScript>();
-            if (!hitbox.applied && hitbox.P2 != P2)
+            if (!hitbox.myHit.applied && hitbox.myHit.P2 != P2)
             {
-                hitbox.applied = true;
-                if (myAnimation.isPlaying) cancelCurrentMove();
-                health -= hitbox.damage;
-                switch (hitbox.height)
-                {
-                    case HitboxScript.attackHeight.HIGH:
-                        anim.Play("HitHigh");
-                        break;                    
-                    case HitboxScript.attackHeight.MID:
-                        anim.Play("HitMid");
-                        break;                    
-                    case HitboxScript.attackHeight.LOW:
-                        anim.Play("HitLow");
-                        break;                   
-                    case HitboxScript.attackHeight.SWEEP:
-                        anim.Play("Swept");
-                        break;
-                }
+                hitbox.myHit.applied = true;
+                GetHit(hitbox.myHit);
             }
+        }
+    }
+
+    public void GetHit(HitboxHandler.hitboxStruct hit)
+    {
+        if((leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.LEFT || !leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.RIGHT || currentBufferOutput[0] == InputBuffer.inputType.NEUTRAL) && !myAnimation.isPlaying && !hitstun) //abandon hope all ye who read this statement
+        {
+            blocking = true;
+            blockExitTime = 20;
+            health -= hit.chipDamage;
+        }
+        else
+        {
+            if (myAnimation.isPlaying) cancelCurrentMove();
+            health -= hit.damage;
+            switch (hit.height)
+            {
+                case HitboxScript.attackHeight.HIGH:
+                    anim.Play("HitHigh", -1, 0);
+                    break;
+                case HitboxScript.attackHeight.MID:
+                    anim.Play("HitMid");
+                    break;
+                case HitboxScript.attackHeight.LOW:
+                    anim.Play("HitLow");
+                    break;
+                case HitboxScript.attackHeight.SWEEP:
+                    anim.Play("Swept");
+                    break;
+            }
+            hitstun = true;
         }
     }
 

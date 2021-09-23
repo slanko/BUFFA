@@ -59,11 +59,6 @@ public class InputBuffer : MonoBehaviour
         }
     }
 
-    void FixedUpdate()
-    {
-
-    }
-
     public inputType[] bufferOutput()
     {
         return buffer;

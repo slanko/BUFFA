@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 5467082780561243694}
   - component: {fileID: 6188903834780008346}
   - component: {fileID: 8331464707255253920}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Projectile
   m_TagString: Hitbox
   m_Icon: {fileID: 7422848464349959988, guid: 0000000000000000d000000000000000, type: 0}
@@ -242,10 +242,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b257d1ef2396e954cb41539ca0ee3ce1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  applied: 0
-  launch: 0
-  P2: 0
-  destroyObject: 0
-  xChangeAmount: 0
-  damage: 50
-  height: 1
+  myHit:
+    active: 1
+    pos: {x: 0, y: 0}
+    scale: {x: 1, y: 1}
+    height: 1
+    launch: 0
+    hitrate: 0
+    xChangeAmount: 0
+    damage: 50

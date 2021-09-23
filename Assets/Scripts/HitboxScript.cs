@@ -11,7 +11,22 @@ public class HitboxScript : MonoBehaviour
         HIGH,
         SWEEP
     }
-    public bool applied, launch, P2, destroyObject;
-    public float xChangeAmount, damage;
-    public attackHeight height;
+    public HitboxHandler.hitboxStruct myHit;
+
+    private void FixedUpdate()
+    {
+        if(myHit.applied && myHit.hitrate != 0)
+        {
+            StartCoroutine(unApplySelf());
+        }
+    }
+
+    IEnumerator unApplySelf()
+    {
+        for(int i = 0; i < myHit.hitrate; i++)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+        myHit.applied = false;
+    }
 }
