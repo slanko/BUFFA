@@ -6,19 +6,18 @@ using UnityEngine.UI;
 public class MeterHandlerScript : MonoBehaviour
 {
     [SerializeField] Slider p1Health, p2Health, p1Lerper, p2Lerper;
+    [SerializeField] Text p1Combo, p2Combo;
     public UniversalPlayerScript playerOne, playerTwo;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
     void Update()
     {
         p1Health.value = playerOne.health;
         p2Health.value = playerTwo.health;
         p1Lerper.value = Mathf.Lerp(p1Lerper.value, p1Health.value, Time.deltaTime);
         p2Lerper.value = Mathf.Lerp(p2Lerper.value, p2Health.value, Time.deltaTime);
+        p1Combo.gameObject.SetActive(playerOne.currentComboCount > 1); 
+        p2Combo.gameObject.SetActive(playerTwo.currentComboCount > 1);
+        if (p1Combo.gameObject.activeSelf) p1Combo.text = "" + playerOne.currentComboCount;
+        if (p2Combo.gameObject.activeSelf) p2Combo.text = "" + playerTwo.currentComboCount;
+
     }
 }

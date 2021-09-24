@@ -17,6 +17,7 @@ public class UniversalPlayerScript : MonoBehaviour
     MoveScriptableObject currentMove;
     int currentMoveFrame;
     [SerializeField] int blockExitTime;
+    float xPushAmount;
 
     [SerializeField, Header("Jumping")] AnimationCurve jumpArc;
     [SerializeField] float jumpSpeed, jumpDist;
@@ -29,6 +30,8 @@ public class UniversalPlayerScript : MonoBehaviour
 
     [Header("Targeting")] public bool leftOfTarget;
     [SerializeField] Transform target, myVisual;
+
+    [System.NonSerialized] public int currentComboCount;
 
     #region inputHandling
     Vector2 moveVals = Vector2.zero;
@@ -366,6 +369,13 @@ public class UniversalPlayerScript : MonoBehaviour
             blocking = false;
             blockExitTime = 0;
         }
+
+        if (xPushAmount > 0) xPushAmount -= 1 * Time.deltaTime * 2;
+        if (xPushAmount < 0) xPushAmount += 1 * Time.deltaTime;
+        if(xPushAmount > 1 || xPushAmount < -1) transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
+        else transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
+
+        if (!hitstun && currentComboCount > 0) currentComboCount = 0;
         handleInputs();
         bufferReadUpdate();
         animatorUpdate();
@@ -433,16 +443,18 @@ public class UniversalPlayerScript : MonoBehaviour
 
     public void GetHit(HitboxHandler.hitboxStruct hit)
     {
-        if((leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.LEFT || !leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.RIGHT || currentBufferOutput[0] == InputBuffer.inputType.NEUTRAL) && !myAnimation.isPlaying && !hitstun) //abandon hope all ye who read this statement
+        if((leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.LEFT || !leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.RIGHT || currentBufferOutput[0] == InputBuffer.inputType.NEUTRAL) && !myAnimation.isPlaying && !hitstun && !dead) //abandon hope all ye who read this statement
         {
             blocking = true;
             blockExitTime = 20;
             health -= hit.chipDamage;
+            addPushForce(hit.xChangeAmount * 0.75f);
         }
         else
         {
             if (myAnimation.isPlaying) cancelCurrentMove();
             health -= hit.damage;
+            if (hitstun == true) currentComboCount++;
             switch (hit.height)
             {
                 case HitboxScript.attackHeight.HIGH:
@@ -459,7 +471,14 @@ public class UniversalPlayerScript : MonoBehaviour
                     break;
             }
             hitstun = true;
+            addPushForce(hit.xChangeAmount);
         }
+    }
+
+    void addPushForce(float amount)
+    {
+        if (leftOfTarget) xPushAmount -= amount;
+        else xPushAmount += amount;
     }
 
 }
