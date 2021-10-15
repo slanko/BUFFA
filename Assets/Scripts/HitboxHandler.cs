@@ -52,7 +52,6 @@ public class HitboxHandler : MonoBehaviour
                 {
                     if (otherPlayerScriptIHope.P2 != playerScript.P2)
                     {
-                        Debug.Log("Hit applied: " + hitbox);
                         otherPlayerScriptIHope.GetHit(hitbox);
                         switch (hitboxNum)
                         {

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class UniversalPlayerScript : MonoBehaviour
 {
+    public PlayerInput myInput;
     public float health;
     public bool P2;
     [SerializeField] float movementSpeed, inputDeadZone;
@@ -29,7 +30,8 @@ public class UniversalPlayerScript : MonoBehaviour
     [SerializeField] MoveScriptableObject[] standingNormals, crouchingNormals, airNormals, movementInputs;
 
     [Header("Targeting")] public bool leftOfTarget;
-    [SerializeField] Transform target, myVisual;
+    public Transform target;
+    [SerializeField] Transform myVisual;
 
     [System.NonSerialized] public int currentComboCount;
 
@@ -331,6 +333,7 @@ public class UniversalPlayerScript : MonoBehaviour
 
     private void Start()
     {
+        myInput = GetComponent<PlayerInput>();
         buffer = GetComponent<InputBuffer>();
         bufferLength = buffer.bufferOutput().Length - 1;
         MeterHandlerScript meterHandler = GameObject.Find("GOD").GetComponent<MeterHandlerScript>();
@@ -371,7 +374,7 @@ public class UniversalPlayerScript : MonoBehaviour
         }
 
         if (xPushAmount > 0) xPushAmount -= 1 * Time.deltaTime * 2;
-        if (xPushAmount < 0) xPushAmount += 1 * Time.deltaTime;
+        if (xPushAmount < 0) xPushAmount += 1 * Time.deltaTime * 2;
         if(xPushAmount > 1 || xPushAmount < -1) transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
         else transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
 
@@ -408,17 +411,22 @@ public class UniversalPlayerScript : MonoBehaviour
             airborne = true;
             for (float i = 0; i < 1; i += (jumpSpeed * Time.deltaTime))
             {
-                if(input == InputBuffer.inputType.UP) transform.position = new Vector3(transform.position.x, pos.y + jumpArc.Evaluate(i), pos.z);
+                switch (input)
+                {
+                    case InputBuffer.inputType.UP:
+                        transform.position = new Vector3(transform.position.x, pos.y + jumpArc.Evaluate(i), pos.z);
+                        break;
 
-                if (input == InputBuffer.inputType.UPRIGHT)
-                {
-                    transform.position = new Vector3(transform.position.x, pos.y + jumpArc.Evaluate(i), pos.z);
-                    transform.Translate(new Vector3(jumpDist * Time.deltaTime, 0, 0));
-                }
-                if (input == InputBuffer.inputType.UPLEFT)
-                {
-                    transform.position = new Vector3(transform.position.x, pos.y + jumpArc.Evaluate(i), pos.z);
-                    transform.Translate(new Vector3(-jumpDist * Time.deltaTime, 0, 0));
+                    case InputBuffer.inputType.UPRIGHT:
+                        transform.position = new Vector3(transform.position.x, pos.y + jumpArc.Evaluate(i), pos.z);
+                        transform.Translate(new Vector3(jumpDist * Time.deltaTime, 0, 0));
+                        break;
+
+                    case InputBuffer.inputType.UPLEFT:
+                        transform.position = new Vector3(transform.position.x, pos.y + jumpArc.Evaluate(i), pos.z);
+                        transform.Translate(new Vector3(-jumpDist * Time.deltaTime, 0, 0));
+                        break;
+
                 }
                 yield return new WaitForEndOfFrame();
                 anim.SetFloat("JumpPercent", i);

@@ -6,6 +6,16 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/ControllerAssignScreen.unity
+    guid: 13fe6d8c3d08d0b46b96ca22b20d6a7f
+  - enabled: 1
+    path: Assets/Scenes/CharacterSelect.unity
+    guid: 08427bd8a91de5f4ca981ad8f290fa2e
+  - enabled: 1
+    path: Assets/Scenes/GameSceneOne.unity
+    guid: 02256ba4750982048a2ad5fa2777ad57
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
-  m_configObjects: {}
+  m_configObjects:
+    com.unity.input.settings: {fileID: 11400000, guid: 51be69f6b0e266e4790ce6d522655d54, type: 2}
