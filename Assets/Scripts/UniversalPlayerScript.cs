@@ -380,7 +380,7 @@ public class UniversalPlayerScript : MonoBehaviour
 
         if (!hitstun && currentComboCount > 0) currentComboCount = 0;
         handleInputs();
-        bufferReadUpdate();
+        if (!hitstun) bufferReadUpdate();
         animatorUpdate();
     }
 
@@ -451,7 +451,7 @@ public class UniversalPlayerScript : MonoBehaviour
 
     public void GetHit(HitboxHandler.hitboxStruct hit)
     {
-        if((leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.LEFT || !leftOfTarget && currentBufferOutput[0] == InputBuffer.inputType.RIGHT || currentBufferOutput[0] == InputBuffer.inputType.NEUTRAL) && !myAnimation.isPlaying && !hitstun && !dead) //abandon hope all ye who read this statement
+        if((leftOfTarget && (currentBufferOutput[0] == InputBuffer.inputType.LEFT || currentBufferOutput[0] == InputBuffer.inputType.DOWNLEFT) || !leftOfTarget && (currentBufferOutput[0] == InputBuffer.inputType.RIGHT || currentBufferOutput[0] == InputBuffer.inputType.DOWNRIGHT) || currentBufferOutput[0] == InputBuffer.inputType.NEUTRAL) && !myAnimation.isPlaying && !hitstun && !dead) //abandon hope all ye who read this statement
         {
             blocking = true;
             blockExitTime = 20;
