@@ -4,10 +4,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 public class UniversalPlayerScript : MonoBehaviour
 {
+    //we need to set up a fucking state machine pronto. this is not looking great in here buddy.
+
     public PlayerInput myInput;
     public float health;
     public bool P2;
-    [SerializeField] float movementSpeed, inputDeadZone;
+    [SerializeField] float movementSpeed, runMovementSpeed, inputDeadZone;
     InputBuffer buffer;
     int bufferLength;
     public bool xDown, yDown, aDown, bDown;
@@ -22,8 +24,8 @@ public class UniversalPlayerScript : MonoBehaviour
 
     [SerializeField, Header("Jumping")] AnimationCurve jumpArc;
     [SerializeField] float jumpSpeed, jumpDist;
-    bool airborne = false, grounded, crouching, blocking, dead;
-     public bool hitstun;
+    bool airborne = false, grounded, crouching, blocking, dead, running;
+    public bool hitstun;
 
     [SerializeField, Header("Move List"), Tooltip("PUT LONGER INPUTS FIRST!! OTHERWISE THEY DON'T GET FIRED")]
     MoveScriptableObject[] specialMoves;
@@ -55,7 +57,7 @@ public class UniversalPlayerScript : MonoBehaviour
             handleButtonInputs();
         }
         if (context.canceled) yDown = false;
-    }    
+    }
     public void ABUTTON(InputAction.CallbackContext context)
     {
         if (context.started)
@@ -64,7 +66,7 @@ public class UniversalPlayerScript : MonoBehaviour
             handleButtonInputs();
         }
         if (context.canceled) aDown = false;
-    }    
+    }
     public void BBUTTON(InputAction.CallbackContext context)
     {
         if (context.started)
@@ -184,6 +186,12 @@ public class UniversalPlayerScript : MonoBehaviour
     InputBuffer.inputType[] currentBufferOutput;
     InputBuffer.inputType currentDir;
 
+    bool getCurrentDir(string dir)
+    {
+        if (dir == currentDir.ToString()) return true;
+        else return false;
+    }
+
     void bufferReadUpdate()
     {
         currentBufferOutput = buffer.bufferOutput();
@@ -251,7 +259,9 @@ public class UniversalPlayerScript : MonoBehaviour
         return input;
     }
 
-    bool checkMove(MoveScriptableObject move , InputBuffer.inputType[] currentBuffer, int bufLength = 0)
+    //WE NEED TO WORK ON THIS. WE NEED LIKE, A BUFFER SYSTEM. WHEN A MOVE IS EXECUTED, SAVE IT, THEN IF ABLE, DO IT. IF NOT ABLE, WAIT UNTIL YOU ARE. 
+    //IF ANOTHER SPECIAL IS DONE, REPLACE BUFFERED SPECIAL. THIS GOES FOR EVERY PART OF THE MOVELIST.
+    bool checkMove(MoveScriptableObject move, InputBuffer.inputType[] currentBuffer, int bufLength = 0)
     {
         if (bufLength == 0) bufLength = currentBuffer.Length - 1;
         bool moveGood = true;
@@ -294,6 +304,7 @@ public class UniversalPlayerScript : MonoBehaviour
 
     void startMove(MoveScriptableObject move)
     {
+        bool continuousMove = move.continuous;
         buffer.clearBuffer();
         animValues.XMoveMultiplier = 0;
         //LEGACY COMPONENTS?? VOMIT EMOJI
@@ -301,12 +312,12 @@ public class UniversalPlayerScript : MonoBehaviour
         currentMove.moveAnim.legacy = true;
         myAnimation.AddClip(move.moveAnim, "MOVE");
         myAnimation.Play("MOVE");
-        currentDisablerCoroutine = StartCoroutine(disableAnimatorForAMove());
+        currentDisablerCoroutine = StartCoroutine(disableAnimatorForAMove(continuousMove));
         Debug.Log("Move good!");
     }
 
     Coroutine currentDisablerCoroutine;
-    IEnumerator disableAnimatorForAMove()
+    IEnumerator disableAnimatorForAMove(bool noIdle = default(bool))
     {
         currentMoveFrame = 0;
         anim.enabled = false;
@@ -318,7 +329,7 @@ public class UniversalPlayerScript : MonoBehaviour
         currentMove.moveAnim.legacy = false; // this is FUCKING ANNOYING!! they have to be legacy to play but have to not be legacy to be edited in unity. CRINGE!!
         currentMove = new MoveScriptableObject();
         anim.enabled = true;
-        anim.Play("Idle");
+        if(noIdle) anim.Play("Idle");
     }
 
     IEnumerator clearTriggerWithDelay(string trigger)
@@ -347,9 +358,17 @@ public class UniversalPlayerScript : MonoBehaviour
         if (health <= 0) dead = true;
         if (!anim.GetBool("Crouching") && !myAnimation.isPlaying && !dead && !blocking && !hitstun)
         {
-            if (currentDir == InputBuffer.inputType.RIGHT) transform.Translate(new Vector3(movementSpeed * Time.deltaTime, 0, 0));
-            if (currentDir == InputBuffer.inputType.LEFT) transform.Translate(new Vector3(-movementSpeed * Time.deltaTime, 0, 0));
-            if (currentDir == InputBuffer.inputType.UP || currentDir == InputBuffer.inputType.UPRIGHT || currentDir == InputBuffer.inputType.UPLEFT)
+            if (!running)
+            {
+                if (getCurrentDir("RIGHT")) transform.Translate(new Vector3(movementSpeed * Time.deltaTime, 0, 0));
+                if (getCurrentDir("LEFT")) transform.Translate(new Vector3(-movementSpeed * Time.deltaTime, 0, 0));
+            }
+            else
+            {
+                if (getCurrentDir("RIGHT")) transform.Translate(new Vector3(runMovementSpeed * Time.deltaTime, 0, 0));
+                if (getCurrentDir("LEFT")) transform.Translate(new Vector3(-runMovementSpeed * Time.deltaTime, 0, 0));
+            }
+            if (getCurrentDir("UP") || getCurrentDir("UPRIGHT") || getCurrentDir("UPLEFT"))
             {
                 StartCoroutine(jump(currentDir));
                 anim.SetTrigger("Jump");
@@ -367,7 +386,7 @@ public class UniversalPlayerScript : MonoBehaviour
             else myVisual.transform.localScale = new Vector3(1, 1, -1);
         }
         if (blockExitTime > 0) blockExitTime--;
-        if(blockExitTime <= 0)
+        if (blockExitTime <= 0)
         {
             blocking = false;
             blockExitTime = 0;
@@ -375,7 +394,7 @@ public class UniversalPlayerScript : MonoBehaviour
 
         if (xPushAmount > 0) xPushAmount -= 1 * Time.deltaTime * 2;
         if (xPushAmount < 0) xPushAmount += 1 * Time.deltaTime * 2;
-        if(xPushAmount > 1 || xPushAmount < -1) transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
+        if (xPushAmount > 1 || xPushAmount < -1) transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
         else transform.Translate(xPushAmount * Time.deltaTime, 0, 0);
 
         if (!hitstun && currentComboCount > 0) currentComboCount = 0;
@@ -388,19 +407,24 @@ public class UniversalPlayerScript : MonoBehaviour
     {
         if (leftOfTarget)
         {
-            anim.SetBool("WalkingForward", currentDir == InputBuffer.inputType.RIGHT);
-            anim.SetBool("WalkingBackward", currentDir == InputBuffer.inputType.LEFT);
+            anim.SetBool("WalkingForward", getCurrentDir("RIGHT"));
+            anim.SetBool("WalkingBackward", getCurrentDir("LEFT"));
         }
         else
         {
-            anim.SetBool("WalkingForward", currentDir == InputBuffer.inputType.LEFT);
-            anim.SetBool("WalkingBackward", currentDir == InputBuffer.inputType.RIGHT);
+            anim.SetBool("WalkingForward", getCurrentDir("LEFT"));
+            anim.SetBool("WalkingBackward", getCurrentDir("RIGHT"));
         }
         anim.SetBool("Airborne", airborne);
-        anim.SetBool("Crouching", currentDir == InputBuffer.inputType.DOWN || currentDir == InputBuffer.inputType.DOWNRIGHT || currentDir == InputBuffer.inputType.DOWNLEFT);
+        anim.SetBool("Crouching", getCurrentDir("DOWN") || getCurrentDir("DOWNRIGHT") || getCurrentDir("DOWNLEFT"));
         crouching = anim.GetBool("Crouching");
         anim.SetBool("Dead", dead);
         anim.SetBool("Block", blocking);
+        if (running && (getCurrentDir("NEUTRAL") || (leftOfTarget && getCurrentDir("LEFT")) || (!leftOfTarget && getCurrentDir("RIGHT")) || (getCurrentDir("UPLEFT") || getCurrentDir("UP") || getCurrentDir("UPRIGHT"))))
+        {
+            anim.SetTrigger("EndRun");
+            running = false;
+        }
     }
 
     IEnumerator jump(InputBuffer.inputType input)
@@ -469,10 +493,10 @@ public class UniversalPlayerScript : MonoBehaviour
                     anim.Play("HitHigh", -1, 0);
                     break;
                 case HitboxScript.attackHeight.MID:
-                    anim.Play("HitMid");
+                    anim.Play("HitMid", -1, 0);
                     break;
                 case HitboxScript.attackHeight.LOW:
-                    anim.Play("HitLow");
+                    anim.Play("HitLow", -1, 0);
                     break;
                 case HitboxScript.attackHeight.SWEEP:
                     anim.Play("Swept");
@@ -480,13 +504,34 @@ public class UniversalPlayerScript : MonoBehaviour
             }
             hitstun = true;
             addPushForce(hit.xChangeAmount);
+            StartCoroutine(hitStop(hit.hitStop));
         }
     }
 
     void addPushForce(float amount)
     {
+        amount = amount * 0.75f;
         if (leftOfTarget) xPushAmount -= amount;
         else xPushAmount += amount;
+    }
+
+    public IEnumerator hitStop(int stopFrames)
+    {
+        Time.timeScale = 0;
+        Debug.Log("Stopped!");
+        for(int i = 0; i < stopFrames; i++)
+        {
+            yield return new WaitForEndOfFrame();
+        }
+        Time.timeScale = 1;
+        Debug.Log("Started.");
+    }
+
+    public void startRunning()
+    {
+        running = true;
+        anim.enabled = true;
+        anim.Play("RunForward");
     }
 
 }

@@ -8,6 +8,7 @@ public class MoveScriptableObject : ScriptableObject
     public string moveName;
     public bool grounded, airborne;
     public int specialCancelTime = 0;
+    public bool continuous;
     public AnimationClip moveAnim;
     public InputBuffer.inputType[] inputRequired;
 

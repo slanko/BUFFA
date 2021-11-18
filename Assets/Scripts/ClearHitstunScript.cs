@@ -10,4 +10,9 @@ public class ClearHitstunScript : MonoBehaviour
     {
         playerScript.hitstun = false;
     }
+
+    public void startRunHelper()
+    {
+        playerScript.startRunning();
+    }
 }

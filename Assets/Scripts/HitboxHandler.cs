@@ -15,6 +15,7 @@ public class HitboxHandler : MonoBehaviour
         public HitboxScript.attackHeight height;
         public bool launch;
         public float hitrate, xChangeAmount, damage, chipDamage, blockstun;
+        public int hitStop;
         public bool P2, applied; // have to keep this applied bool for stuff like projectiles (but maybe they could be their own struct eventually?
     }
 
